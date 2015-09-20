@@ -3,50 +3,59 @@ using namespace std;
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
 
-#include "clientSocket.h"
+#include "Socket.h"
 
+bool checkArgs(int argc, char *argv[])
+{
+   if (argc < 2)
+   {
+      cout << "Invalid arguments:" << endl;
+      cout << "Correct: ./" << argv[0] << " log1 log2 ... logN" << endl;
+
+      return false;
+   }
+   return true;
+}
 
 int main(int argc , char *argv[])
 {
-   char msgSend[2000], msgRecieve[2000];
-   clientSocket mClientSocket;
-   clientSocket::resultType result;
-
-   result = mClientSocket.initSocket();
-   if (result != clientSocket::OK)
+   if (!checkArgs(argc, argv))
    {
-      cout << clientSocket::getError(result) << endl;
       return -1;
    }
 
-   //Keep communicating with server
-   while(true)
+   char msg[2000];
+   Socket mClientSocket;
+   Socket::resultType result;
+
+   result = mClientSocket.initClientSocket();
+   if (result != Socket::OK)
    {
-      cout << "Enter message : ";
-      cin.getline(msgSend, 1000);
-
-      //Sends the written message
-      result = mClientSocket.sendMsg(msgSend);
-      if (result != clientSocket::OK)
-      {
-           cout << clientSocket::getError(result) << endl;
-           return -1;
-      }
-
-      //Waits until message response reception
-      result = mClientSocket.receiveMsg(msgRecieve);
-      if (result != clientSocket::OK)
-      {
-         cout << clientSocket::getError(result) << endl;
-         return -1;
-      }
-
-      cout << "Server reply : " << msgRecieve << endl;
+      cout << Socket::getError(result) << endl;
+      return -1;
    }
+
+   cout << "Enter message : ";
+   cin.getline(msg, 1000);
+
+   //Sends the written message
+   result = mClientSocket.sendMsg(msg);
+   if (result != Socket::OK)
+   {
+      cout << Socket::getError(result) << endl;
+         return -1;
+   }
+
+   //Waits until message response reception
+   result = mClientSocket.receiveMsg(msg);
+   if (result != Socket::OK)
+   {
+      cout << Socket::getError(result) << endl;
+      return -1;
+   }
+
+   cout << "Server reply : " << msg << endl;
 
    mClientSocket.finiSocket();
    return 0;
