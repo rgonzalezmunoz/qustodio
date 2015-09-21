@@ -5,6 +5,7 @@ using namespace std;
 #include <string.h>
 
 #include "Socket.h"
+#include "LogScanner.h"
 
 bool checkArgs(int argc, char *argv[])
 {
@@ -20,14 +21,21 @@ bool checkArgs(int argc, char *argv[])
 
 int main(int argc , char *argv[])
 {
+   char msg[2000];
+   Socket mClientSocket;
+   Socket::resultType result;
+   LogScanner mLogScanner;
+   string mQuestionableList;
+
    if (!checkArgs(argc, argv))
    {
       return -1;
    }
 
-   char msg[2000];
-   Socket mClientSocket;
-   Socket::resultType result;
+   mLogScanner.setLogFileName(argv[1]);
+   if (mLogScanner.findQuestionableActivities() >= 0)
+      mQuestionableList = mLogScanner.getQuestionableActivityList();
+
 
    result = mClientSocket.initClientSocket();
    if (result != Socket::OK)
@@ -37,10 +45,12 @@ int main(int argc , char *argv[])
    }
 
    cout << "Enter message : ";
-   cin.getline(msg, 1000);
+   //cin.getline(msg, 1000);
+
 
    //Sends the written message
-   result = mClientSocket.sendMsg(msg);
+   //result = mClientSocket.sendMsg(msg);
+   result = mClientSocket.sendMsg(mQuestionableList.c_str());
    if (result != Socket::OK)
    {
       cout << Socket::getError(result) << endl;

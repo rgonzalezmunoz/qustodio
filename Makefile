@@ -10,7 +10,7 @@ LDFLAGS=-lpthread
 # It is recommeded to locate all this files in a src
 # directory below the directory where makefile is located
 SOURCES_SERVER=src/mainRSServer.cpp src/Socket.cpp
-SOURCES_CLIENT=src/mainRSClient.cpp src/Socket.cpp
+SOURCES_CLIENT=src/mainRSClient.cpp src/Socket.cpp src/LogScanner.cpp
 
 
 # CHECK_INCLUDES include header files that force
@@ -28,7 +28,7 @@ EXECUTABLE_CLIENT=rsclient
 #OBJECTS_SERVER=$(SOURCES_SERVER:.c=.o)
 OBJECTS_SERVER=src/mainRSServer.o src/Socket.o
 #OBJECTS_CLIENT=$(SOURCES_CLIENT:.c=.o)
-OBJECTS_CLIENT=src/mainRSClient.o src/Socket.o
+OBJECTS_CLIENT=src/mainRSClient.o src/Socket.o src/LogScanner.o
 
 
 # Include file paths include general "C" include location
