@@ -21,7 +21,7 @@ bool checkArgs(int argc, char *argv[])
 
 int main(int argc , char *argv[])
 {
-   char msg[2000];
+   string msg;
    Socket mClientSocket;
    Socket::resultType result;
    LogScanner mLogScanner;
@@ -49,8 +49,7 @@ int main(int argc , char *argv[])
 
 
    //Sends the written message
-   //result = mClientSocket.sendMsg(msg);
-   result = mClientSocket.sendMsg(mQuestionableList.c_str());
+   result = mClientSocket.sendMsg(mQuestionableList);
    if (result != Socket::OK)
    {
       cout << Socket::getError(result) << endl;

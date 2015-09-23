@@ -5,6 +5,7 @@ Socket::Socket()
    server_sock = -1;
    client_sock = -1;
    PORT_SERVER = -1;
+   IP_ADDRESS_SERVER = "";
 }
 
 Socket::~Socket()
@@ -36,10 +37,10 @@ Socket::resultType Socket::initServerSocket(const int port)
    return OK;
 }
 
-Socket::resultType Socket::initClientSocket(const int port, const char *address)
+Socket::resultType Socket::initClientSocket(const int port, const string &address)
 {
    PORT_SERVER = port;
-   strncpy(IP_ADDRESS_SERVER, address, strlen(address));
+   IP_ADDRESS_SERVER = address;
 
    //Create socket
    client_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -47,7 +48,7 @@ Socket::resultType Socket::initClientSocket(const int port, const char *address)
       return ERROR_SOCKET;
 
    //Initiate address structure
-   server.sin_addr.s_addr = inet_addr( IP_ADDRESS_SERVER );
+   server.sin_addr.s_addr = inet_addr( IP_ADDRESS_SERVER.c_str() );
    server.sin_family = AF_INET;
    server.sin_port = htons( PORT_SERVER );
 
@@ -68,24 +69,25 @@ Socket::resultType Socket::acceptConnect()
    return OK;
 }
 
-Socket::resultType Socket::sendMsg(const char *message)
+Socket::resultType Socket::sendMsg(const string &message)
 {
-   if( send(client_sock, message, MSG_LEN, 0) < 0)
+   if( send(client_sock, message.c_str(), message.size(), 0) < 0)
        return ERROR_SEND;
    return OK;
 }
 
-Socket::resultType Socket::receiveMsg(char *message)
+Socket::resultType Socket::receiveMsg(string &message)
 {
    int sizeResp;
+   char aux[RCV_MSG_LEN];
 
-   sizeResp = recv(client_sock, message, MSG_LEN, 0);
+   sizeResp = recv(client_sock, aux, RCV_MSG_LEN, 0);
    if( sizeResp < 0 )
       return ERROR_RECEIVE;
    else if ( sizeResp == 0 )
       return OK_DISCONNECTED;
    else
-      message[sizeResp] = '\0';
+      message = string(aux, sizeResp);
 
    return OK;
 }

@@ -102,7 +102,6 @@ bool LogScanner::getNextQuestionableActivity(activityType &lActivity)
 bool LogScanner::isQuestionable(const string lUrl)
 {
    int ii = 0;
-   //while ( mQuestionableWords[ii] != "NULL" )
    for ( vector<string>::iterator it=mQuestionableWords.begin(); it!=mQuestionableWords.end(); ++it)
    {
       if (lUrl.find(*it) != string::npos )

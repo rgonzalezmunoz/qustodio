@@ -47,17 +47,17 @@ int main(int argc , char *argv[])
 void *connectionHandler(void *lpServerSocket)
 {
    Socket lServerSocket = *(Socket*)lpServerSocket;
-   char client_message[2000];
    Socket::resultType result;
+   string msg;
 
    //Receive a message from client
-   result = lServerSocket.receiveMsg(client_message);
+   result = lServerSocket.receiveMsg(msg);
    if ( result == Socket::OK )
    {
-      cout << "QUE: " << client_message << endl;
+      cout << "QUE: " << msg << endl;
 
       //Send the message back to client
-      lServerSocket.sendMsg(client_message);
+      lServerSocket.sendMsg(msg);
    }
    else if (result == Socket::OK_DISCONNECTED)
    {
