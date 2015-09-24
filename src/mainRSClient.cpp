@@ -25,7 +25,7 @@ int main(int argc , char *argv[])
    Socket mClientSocket;
    Socket::resultType result;
    LogScanner mLogScanner;
-   string mQuestionableList;
+   LogScanner::activityList mActivityList;
 
    if (!checkArgs(argc, argv))
    {
@@ -33,9 +33,17 @@ int main(int argc , char *argv[])
    }
 
    mLogScanner.setLogFileName(argv[1]);
-   if (mLogScanner.findQuestionableActivities() >= 0)
-      mQuestionableList = mLogScanner.getQuestionableActivityList();
-
+   int numQuestionableActivities = mLogScanner.findQuestionableActivities(mActivityList);
+   if (numQuestionableActivities == 0)
+   {
+      cout << "No questionable activities found" << endl;
+      return 0;
+   }
+   else if (numQuestionableActivities < 0)
+   {
+      cout << "Error searching for questionable activities" << endl;
+      return -1;
+   }
 
    result = mClientSocket.initClientSocket();
    if (result != Socket::OK)
@@ -44,27 +52,27 @@ int main(int argc , char *argv[])
       return -1;
    }
 
-   cout << "Enter message : ";
-   //cin.getline(msg, 1000);
-
-
-   //Sends the written message
-   result = mClientSocket.sendMsg(mQuestionableList);
-   if (result != Socket::OK)
+   for ( LogScanner::activityList::iterator it=mActivityList.begin(); it!=mActivityList.end(); ++it)
    {
-      cout << Socket::getError(result) << endl;
+      //Sends the activity or event
+      result = mClientSocket.sendMsg(it->getActivityString());
+      if (result != Socket::OK)
+      {
+         cout << Socket::getError(result) << endl;
          return -1;
-   }
+      }
+      cout << "SENT: " << it->getActivityString() << endl;
 
-   //Waits until message response reception
-   result = mClientSocket.receiveMsg(msg);
-   if (result != Socket::OK)
-   {
-      cout << Socket::getError(result) << endl;
-      return -1;
-   }
+      //Waits until activity confirmation
+      result = mClientSocket.receiveMsg(msg);
+      if (result != Socket::OK)
+      {
+         cout << Socket::getError(result) << endl;
+         return -1;
+      }
+      cout << "RECV: " << msg << endl;
 
-   cout << "Server reply : " << msg << endl;
+   }
 
    mClientSocket.finiSocket();
    return 0;

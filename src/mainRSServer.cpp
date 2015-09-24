@@ -3,10 +3,37 @@
 #include <stdlib.h>    //strlen
 #include <cstdlib>
 #include <pthread.h>
-#include <iostream>
+#include <iosfwd>
+#include <sstream>
+#include <set>
 using namespace std;
 
 #include "Socket.h"
+
+
+class EventTable
+{
+public:
+	EventTable(){};
+
+	bool insertEvent(string lEvent)
+	{
+		pair<set<string>::iterator,bool> ret;
+		ret = myset.insert(lEvent);
+		return (ret.second);
+	};
+	string getNumEvents()
+	{
+		ostringstream oss;
+		oss << myset.size();
+		return oss.str();
+	};
+
+private:
+	set<string> myset;
+};
+
+EventTable gEventTable;
 
 void *connectionHandler(void *);
 
@@ -14,6 +41,7 @@ int main(int argc , char *argv[])
 {
    Socket mServerSocket, *mpServerSocket;
    Socket::resultType result;
+
 
    result = mServerSocket.initServerSocket();
    if (result != Socket::OK)
@@ -50,25 +78,38 @@ void *connectionHandler(void *lpServerSocket)
    Socket::resultType result;
    string msg;
 
-   //Receive a message from client
-   result = lServerSocket.receiveMsg(msg);
-   if ( result == Socket::OK )
-   {
-      cout << "QUE: " << msg << endl;
+   do {
+      //Receive a message from client
+      result = lServerSocket.receiveMsg(msg);
+      if ( result == Socket::OK )
+      {
+         cout << "RECEIVED: " << msg << endl;
 
-      //Send the message back to client
-      lServerSocket.sendMsg(msg);
+         //Insert the message
+         string insertion;
+         if (gEventTable.insertEvent(msg))           // Insertion successful
+            insertion = "TRUE";
+         else
+            insertion = "FALSE";
+
+         //Send the response
+         insertion += gEventTable.getNumEvents();
+         lServerSocket.sendMsg(insertion);
+
+         cout << "SENT: " << msg << endl;
+      }
+      else if (result == Socket::OK_DISCONNECTED)
+      {
+         cout << "Client disconnected" << endl;
+         fflush(stdout);
+      }
+      else
+      {
+         cout << Socket::getError(result) << endl;
+         fflush(stdout);
+      }
    }
-   else if (result == Socket::OK_DISCONNECTED)
-   {
-      cout << "Client disconnected" << endl;
-      fflush(stdout);
-   }
-   else
-   {
-      cout << Socket::getError(result) << endl;
-      fflush(stdout);
-   }
+   while (result == Socket::OK);
 
    pthread_exit(NULL);
 }

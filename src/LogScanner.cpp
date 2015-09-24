@@ -4,7 +4,6 @@
 LogScanner::LogScanner()
 {
    mFileName = "";
-   mActivityList.clear();
 
    mQuestionableWords.push_back("porn");
    mQuestionableWords.push_back("xxx");
@@ -54,7 +53,7 @@ int LogScanner::close()
    return 0;
 }
 
-int LogScanner::findQuestionableActivities()
+int LogScanner::findQuestionableActivities(activityList &lActivityList)
 {
    activityType lActivity;
 
@@ -66,7 +65,7 @@ int LogScanner::findQuestionableActivities()
 
    while (!fIn.eof())
       if (getNextQuestionableActivity(lActivity))
-         mActivityList.push_back(lActivity);
+         lActivityList.push_back(lActivity);
 
    if (close() < 0)
    {
@@ -74,7 +73,7 @@ int LogScanner::findQuestionableActivities()
       return -1;
    }
 
-   return mActivityList.size();
+   return lActivityList.size();
 }
 
 bool LogScanner::getNextQuestionableActivity(activityType &lActivity)
@@ -105,10 +104,7 @@ bool LogScanner::isQuestionable(const string lUrl)
    for ( vector<string>::iterator it=mQuestionableWords.begin(); it!=mQuestionableWords.end(); ++it)
    {
       if (lUrl.find(*it) != string::npos )
-      {
-         //cout << "QUESTURL[" << *it << "]: " << lUrl << endl;
          return true;
-      }
       ii++;
    };
    return false;
@@ -128,26 +124,4 @@ string LogScanner::readLine(const string mFindLine)
          return ("");
    }
    return ("");
-}
-
-string LogScanner::getQuestionableActivityList()
-{
-   string lActivities = "";
-
-   for ( activityList::iterator it=mActivityList.begin(); it!=mActivityList.end(); ++it)
-   {
-      lActivities += "device : ";
-      lActivities += it->device;
-      lActivities += "\n";
-
-      lActivities += "url : ";
-      lActivities += it->url;
-      lActivities += "\n";
-
-      lActivities += "timestamp : ";
-      lActivities += it->timestamp;
-      lActivities += "\n";
-   }
-
-   return (lActivities);
 }

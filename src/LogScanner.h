@@ -14,6 +14,7 @@ public:
       string url;
       string timestamp;
       activityType(): device(""), url(""), timestamp("") {}
+      string getActivityString() { return (device + "\n" + url + "\n" + timestamp + "\n"); };
    };
 
    typedef vector<activityType> activityList;
@@ -23,8 +24,7 @@ public:
    ~LogScanner();
 
    void setLogFileName(const string lFileName);
-   int findQuestionableActivities();
-   string getQuestionableActivityList();
+   int findQuestionableActivities(activityList &lActivityList);
 
 private:
    int open();
@@ -34,10 +34,8 @@ private:
    bool isQuestionable(const string lUrl);
 
 private:
-   string       mFileName;
-   ifstream     fIn;
-   activityList mActivityList;
-
+   string         mFileName;
+   ifstream       fIn;
    vector<string> mQuestionableWords;
 };
 
