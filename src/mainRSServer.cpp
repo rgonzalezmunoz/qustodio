@@ -1,115 +1,122 @@
 #include <stdio.h>
-#include <string.h>    //strlen
-#include <stdlib.h>    //strlen
-#include <cstdlib>
+#include <string.h>
 #include <pthread.h>
-#include <iosfwd>
 #include <sstream>
-#include <set>
+#include <iostream>
+
 using namespace std;
 
+/*
+ * Includes
+ */
 #include "Socket.h"
+#include "EventTable.h"
 
-
-class EventTable
-{
-public:
-	EventTable(){};
-
-	bool insertEvent(string lEvent)
-	{
-		pair<set<string>::iterator,bool> ret;
-		ret = myset.insert(lEvent);
-		return (ret.second);
-	};
-	string getNumEvents()
-	{
-		ostringstream oss;
-		oss << myset.size();
-		return oss.str();
-	};
-
-private:
-	set<string> myset;
-};
-
+/*
+ * Globals
+ */
 EventTable gEventTable;
 
-void *connectionHandler(void *);
+/*
+ * Thread handlers
+ */
+void *connectionHandler(void *lpServerSocket);
+void *eventsMonitor(void *lpTime);
+
 
 int main(int argc , char *argv[])
 {
-   Socket mServerSocket, *mpServerSocket;
-   Socket::resultType result;
+   pthread_t mMonitorThread, mClientThread;
+   Socket *mpServerSocket = new Socket();
+   Socket::resultType mResult;
+   int *mpSleepTime = new int(5);
 
-
-   result = mServerSocket.initServerSocket();
-   if (result != Socket::OK)
+   mResult = mpServerSocket->initServerSocket();
+   if (mResult != Socket::OK)
    {
-      cout << Socket::getError(result) << endl;
+      cout << Socket::getError(mResult) << endl;
       return -1;
    }
 
+   //Start events monitor thread
+   if( pthread_create( &mMonitorThread, NULL, eventsMonitor, (void *)mpSleepTime) < 0)
+      return -1;
+
    while( true )
    {
-      result = mServerSocket.acceptConnect();
-      if (result != Socket::OK)
+      mResult = mpServerSocket->acceptConnect();
+      if (mResult != Socket::OK)
       {
-          cout << Socket::getError(result) << endl;
+          cout << Socket::getError(mResult) << endl;
           return -1;
       }
 
-      mpServerSocket = &mServerSocket;
-
-      pthread_t clientThread;
-      if( pthread_create( &clientThread, NULL, connectionHandler, (void*)mpServerSocket) < 0)
+      //Start connection handler thread for an incoming connection
+      if( pthread_create( &mClientThread, NULL, connectionHandler, (void*)mpServerSocket) < 0)
+      {
          return -1;
+      }
    }
-
    return 0;
 }
 
+
 /*
- * This will handle connection for each client
- * */
+ * Thread task that reports last received events
+ */
+void *eventsMonitor(void *lpTime)
+{
+   vector<string> lLastEvents;
+   int *lTime = (int *)lpTime;
+
+   while (true)
+   {
+      sleep(*lTime);
+
+      lLastEvents = gEventTable.getLastEvents();
+      cout << "--- Last Events Received: ---------" << endl;
+      if (lLastEvents.size() != 0)
+         for ( vector<string>::iterator it=lLastEvents.begin(); it!=lLastEvents.end(); ++it)
+            cout << *it;
+      else
+         cout << "--- None during the last period ---" << endl;
+      cout << "-----------------------------------" << endl;
+
+      lLastEvents.clear();
+   }
+
+   pthread_exit(NULL);
+}
+
+/*
+ * Thread task that handles a client connection
+ */
 void *connectionHandler(void *lpServerSocket)
 {
    Socket lServerSocket = *(Socket*)lpServerSocket;
-   Socket::resultType result;
-   string msg;
+   Socket::resultType lResult;
+   string lMsgRecv;
+   unsigned long int lCount;
+   bool bInsertResult;
 
    do {
       //Receive a message from client
-      result = lServerSocket.receiveMsg(msg);
-      if ( result == Socket::OK )
+      lResult = lServerSocket.receiveMsg(lMsgRecv);
+      if ( lResult == Socket::OK )
       {
-         cout << "RECEIVED: " << msg << endl;
-
-         //Insert the message
-         string insertion;
-         if (gEventTable.insertEvent(msg))           // Insertion successful
-            insertion = "TRUE";
-         else
-            insertion = "FALSE";
+         //Insert the event and get insertion result
+         bInsertResult = gEventTable.insertEvent(lMsgRecv, lCount);
+         stringstream lMsgResp;
+         lMsgResp << (bInsertResult ? "TRUE|" : "FALSE|") << lCount;
 
          //Send the response
-         insertion += gEventTable.getNumEvents();
-         lServerSocket.sendMsg(insertion);
-
-         cout << "SENT: " << msg << endl;
-      }
-      else if (result == Socket::OK_DISCONNECTED)
-      {
-         cout << "Client disconnected" << endl;
-         fflush(stdout);
-      }
-      else
-      {
-         cout << Socket::getError(result) << endl;
-         fflush(stdout);
+         lServerSocket.sendMsg(lMsgResp.str());
       }
    }
-   while (result == Socket::OK);
+   while (lResult == Socket::OK);
+
+   if ((lResult != Socket::OK) && (lResult != Socket::OK_DISCONNECTED))
+      cout << Socket::getError(lResult) << endl;
 
    pthread_exit(NULL);
 }

@@ -1,13 +1,12 @@
 #ifndef Socket_h
 #define Socket_h
 
-#include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-
 #include <iostream>
+
 using namespace std;
 
 class Socket
@@ -35,21 +34,21 @@ public:
    Socket();
    ~Socket();
 
-   Socket::resultType initServerSocket(const int port = 42422);
-   Socket::resultType initClientSocket(const int port = 42422, const string &address = "127.0.0.1");
+   Socket::resultType initServerSocket(const int lPort = 42422);
+   Socket::resultType initClientSocket(const int lPort = 42422, const string &lAddress = "127.0.0.1");
    Socket::resultType acceptConnect();
-   Socket::resultType sendMsg(const string &message);
-   Socket::resultType receiveMsg(string &message);
-   Socket::resultType finiSocket();
+   Socket::resultType sendMsg(const string &lMsg);
+   Socket::resultType receiveMsg(string &lMsg);
+   Socket::resultType closeSocket();
 
-   static const char* getError(Socket::resultType error);
+   static const char* getError(Socket::resultType lError);
 
 private:
 
-   string             IP_ADDRESS_SERVER;
-   int                PORT_SERVER;
-   int                server_sock, client_sock;
-   struct sockaddr_in server, client;
+   string             mIPAddressServer;
+   int                mPortServer;
+   int                mServerSock, mClientSock;
+   struct sockaddr_in mServerAddr, mClientAddr;
 };
 
 #endif

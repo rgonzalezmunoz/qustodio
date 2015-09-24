@@ -3,18 +3,23 @@
 
 #include <fstream>
 #include <vector>
-#include <iostream>
+
 using namespace std;
 
 class LogScanner
 {
 public:
-   struct activityType {
+   struct activityType
+   {
       string device;
       string url;
       string timestamp;
+
       activityType(): device(""), url(""), timestamp("") {}
-      string getActivityString() { return (device + "\n" + url + "\n" + timestamp + "\n"); };
+      string getActivityString()
+      {
+         return (device + "\n" + url + "\n" + timestamp + "\n");
+      };
    };
 
    typedef vector<activityType> activityList;
@@ -27,15 +32,15 @@ public:
    int findQuestionableActivities(activityList &lActivityList);
 
 private:
-   int open();
-   int close();
-   string readLine(const string mFindLine);
+   bool open();
+   bool close();
+   string readLine(const string lFindLine);
    bool getNextQuestionableActivity(activityType &lActivity);
    bool isQuestionable(const string lUrl);
 
 private:
    string         mFileName;
-   ifstream       fIn;
+   ifstream       mInFile;
    vector<string> mQuestionableWords;
 };
 

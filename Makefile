@@ -9,7 +9,7 @@ LDFLAGS=-lpthread
 # from the location of the Makefile
 # It is recommeded to locate all this files in a src
 # directory below the directory where makefile is located
-SOURCES_SERVER=src/mainRSServer.cpp src/Socket.cpp
+SOURCES_SERVER=src/mainRSServer.cpp src/Socket.cpp src/EventTable.cpp
 SOURCES_CLIENT=src/mainRSClient.cpp src/Socket.cpp src/LogScanner.cpp
 
 
@@ -25,9 +25,7 @@ EXECUTABLE_CLIENT=rsclient
 
 # Object files to be generated
 # They will be located in the same place as the source files
-#OBJECTS_SERVER=$(SOURCES_SERVER:.c=.o)
-OBJECTS_SERVER=src/mainRSServer.o src/Socket.o
-#OBJECTS_CLIENT=$(SOURCES_CLIENT:.c=.o)
+OBJECTS_SERVER=src/mainRSServer.o src/Socket.o src/EventTable.o
 OBJECTS_CLIENT=src/mainRSClient.o src/Socket.o src/LogScanner.o
 
 

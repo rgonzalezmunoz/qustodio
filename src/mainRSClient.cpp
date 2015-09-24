@@ -4,8 +4,12 @@ using namespace std;
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Includes
+ */
 #include "Socket.h"
 #include "LogScanner.h"
+
 
 bool checkArgs(int argc, char *argv[])
 {
@@ -21,59 +25,68 @@ bool checkArgs(int argc, char *argv[])
 
 int main(int argc , char *argv[])
 {
-   string msg;
    Socket mClientSocket;
-   Socket::resultType result;
+   Socket::resultType mResult;
    LogScanner mLogScanner;
    LogScanner::activityList mActivityList;
+   string mMsgRecv;
+   int mNumQActv = 0;                        //Number of questionable activities
 
    if (!checkArgs(argc, argv))
+      return -1;
+
+   mResult = mClientSocket.initClientSocket();
+   if (mResult != Socket::OK)
    {
+      cout << Socket::getError(mResult) << endl;
       return -1;
    }
 
-   mLogScanner.setLogFileName(argv[1]);
-   int numQuestionableActivities = mLogScanner.findQuestionableActivities(mActivityList);
-   if (numQuestionableActivities == 0)
+   //Search questionable activities in all log files passed as arguments
+   for (int ii = 1; ii < argc; ii++)
    {
-      cout << "No questionable activities found" << endl;
-      return 0;
-   }
-   else if (numQuestionableActivities < 0)
-   {
-      cout << "Error searching for questionable activities" << endl;
-      return -1;
-   }
+      mLogScanner.setLogFileName(argv[ii]);
+      mNumQActv = mLogScanner.findQuestionableActivities(mActivityList);
 
-   result = mClientSocket.initClientSocket();
-   if (result != Socket::OK)
-   {
-      cout << Socket::getError(result) << endl;
-      return -1;
-   }
-
-   for ( LogScanner::activityList::iterator it=mActivityList.begin(); it!=mActivityList.end(); ++it)
-   {
-      //Sends the activity or event
-      result = mClientSocket.sendMsg(it->getActivityString());
-      if (result != Socket::OK)
+      if (mNumQActv > 0)
       {
-         cout << Socket::getError(result) << endl;
-         return -1;
-      }
-      cout << "SENT: " << it->getActivityString() << endl;
+         cout << "--- Sending questionable activities in " << argv[ii] << endl;
 
-      //Waits until activity confirmation
-      result = mClientSocket.receiveMsg(msg);
-      if (result != Socket::OK)
+         for ( LogScanner::activityList::iterator it=mActivityList.begin();
+               it!=mActivityList.end(); ++it)
+         {
+            //Sends the activity or event
+            mResult = mClientSocket.sendMsg(it->getActivityString());
+            if (mResult != Socket::OK)
+            {
+               cout << Socket::getError(mResult) << endl;
+               return -1;
+            }
+            //TODO: REMOVE. Delay to easily test multiple clients
+            sleep(1);
+
+            //Waits until activity confirmation
+            mResult = mClientSocket.receiveMsg(mMsgRecv);
+            if (mResult != Socket::OK)
+            {
+               cout << Socket::getError(mResult) << endl;
+               return -1;
+            }
+            cout << "Confirmation received: " << mMsgRecv << endl;
+         }
+
+         mActivityList.clear();
+      }
+      else if (mNumQActv == 0)
       {
-         cout << Socket::getError(result) << endl;
-         return -1;
+         cout << "--- No questionable activities found in " << argv[ii] << endl;
       }
-      cout << "RECV: " << msg << endl;
-
+      else
+      {
+         cout << "--- Error searching for questionable activities in " << argv[ii] << endl;
+      }
    }
 
-   mClientSocket.finiSocket();
+   mClientSocket.closeSocket();
    return 0;
 }

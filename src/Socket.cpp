@@ -2,58 +2,58 @@
 
 Socket::Socket()
 {
-   server_sock = -1;
-   client_sock = -1;
-   PORT_SERVER = -1;
-   IP_ADDRESS_SERVER = "";
+   mServerSock = -1;
+   mClientSock = -1;
+   mPortServer = -1;
+   mIPAddressServer = "";
 }
 
 Socket::~Socket()
 {
 }
 
-Socket::resultType Socket::initServerSocket(const int port)
+Socket::resultType Socket::initServerSocket(const int lPort)
 {
-   PORT_SERVER = port;
+   mPortServer = lPort;
 
    //Create socket
-   server_sock = socket(AF_INET , SOCK_STREAM , 0);
-   if (server_sock == -1)
+   mServerSock = socket(AF_INET , SOCK_STREAM , 0);
+   if (mServerSock == -1)
       return ERROR_SOCKET;
 
    //Initiate address structure
-   server.sin_family = AF_INET;
-   server.sin_addr.s_addr = INADDR_ANY;
-   server.sin_port = htons( PORT_SERVER );
+   mServerAddr.sin_family = AF_INET;
+   mServerAddr.sin_addr.s_addr = INADDR_ANY;
+   mServerAddr.sin_port = htons( mPortServer );
 
    //Bind
-   if( bind(server_sock,(struct sockaddr *)&server , sizeof(server)) < 0)
+   if( bind(mServerSock,(struct sockaddr *)&mServerAddr , sizeof(mServerAddr)) < 0)
       return ERROR_BIND;
 
    //Listen
-   if( listen(server_sock, 3) < 0)
+   if( listen(mServerSock, 3) < 0)
       return ERROR_LISTEN;
 
    return OK;
 }
 
-Socket::resultType Socket::initClientSocket(const int port, const string &address)
+Socket::resultType Socket::initClientSocket(const int lPort, const string &lAddress)
 {
-   PORT_SERVER = port;
-   IP_ADDRESS_SERVER = address;
+   mPortServer = lPort;
+   mIPAddressServer = lAddress;
 
    //Create socket
-   client_sock = socket(AF_INET, SOCK_STREAM, 0);
-   if (client_sock == -1)
+   mClientSock = socket(AF_INET, SOCK_STREAM, 0);
+   if (mClientSock == -1)
       return ERROR_SOCKET;
 
    //Initiate address structure
-   server.sin_addr.s_addr = inet_addr( IP_ADDRESS_SERVER.c_str() );
-   server.sin_family = AF_INET;
-   server.sin_port = htons( PORT_SERVER );
+   mClientAddr.sin_addr.s_addr = inet_addr( mIPAddressServer.c_str() );
+   mClientAddr.sin_family = AF_INET;
+   mClientAddr.sin_port = htons( mPortServer );
 
    //Connect to remote server
-   if (connect(client_sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+   if (connect(mClientSock , (struct sockaddr *)&mClientAddr , sizeof(mClientAddr)) < 0)
       return ERROR_CONNECT;
 
    return OK;
@@ -63,58 +63,58 @@ Socket::resultType Socket::acceptConnect()
 {
    int c = sizeof(struct sockaddr_in);
 
-   client_sock = accept(server_sock, (struct sockaddr *)&client, (socklen_t*)&c);
-   if(client_sock < 0)
+   mClientSock = accept(mServerSock, (struct sockaddr *)&mClientAddr, (socklen_t*)&c);
+   if(mClientSock < 0)
       return ERROR_ACCEPT;
    return OK;
 }
 
-Socket::resultType Socket::sendMsg(const string &message)
+Socket::resultType Socket::sendMsg(const string &lMsg)
 {
-   if( send(client_sock, message.c_str(), message.size(), 0) < 0)
+   if( send(mClientSock, lMsg.c_str(), lMsg.size(), 0) < 0)
        return ERROR_SEND;
    return OK;
 }
 
-Socket::resultType Socket::receiveMsg(string &message)
+Socket::resultType Socket::receiveMsg(string &lMsg)
 {
    int sizeResp;
    char aux[RCV_MSG_LEN];
 
-   sizeResp = recv(client_sock, aux, RCV_MSG_LEN, 0);
+   sizeResp = recv(mClientSock, aux, RCV_MSG_LEN, 0);
    if( sizeResp < 0 )
       return ERROR_RECEIVE;
    else if ( sizeResp == 0 )
       return OK_DISCONNECTED;
    else
-      message = string(aux, sizeResp);
+      lMsg = string(aux, sizeResp);
 
    return OK;
 }
 
-Socket::resultType Socket::finiSocket()
+Socket::resultType Socket::closeSocket()
 {
-   if (server_sock != -1)
-      close(server_sock);
-   if (client_sock != -1)
-      close(client_sock);
+   if (mServerSock != -1)
+      close(mServerSock);
+   if (mClientSock != -1)
+      close(mClientSock);
 
    return OK;
 }
 
-const char* Socket::getError(resultType error)
+const char* Socket::getError(resultType lError)
 {
-   switch (error)
+   switch (lError)
    {
-   case ERROR_SOCKET:  return "Could not create socket";
-   case ERROR_CONNECT: return "Connect failed";
-   case ERROR_SEND:    return "Send failed";
-   case ERROR_RECEIVE: return "Receive failed";
-   case ERROR_BIND:    return "Bind failed";
-   case ERROR_LISTEN:  return "Listen failed";
-   case ERROR_ACCEPT:  return "Accept failed";
+   case ERROR_SOCKET:    return "Could not create socket";
+   case ERROR_CONNECT:   return "Connect failed";
+   case ERROR_SEND:      return "Send failed";
+   case ERROR_RECEIVE:   return "Receive failed";
+   case ERROR_BIND:      return "Bind failed";
+   case ERROR_LISTEN:    return "Listen failed";
+   case ERROR_ACCEPT:    return "Accept failed";
+   case OK_DISCONNECTED: return "Client disconnected";
    case OK:
-   case OK_DISCONNECTED:
    default: return "No error";
    }
    return "No error";
