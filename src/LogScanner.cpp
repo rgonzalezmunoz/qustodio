@@ -103,7 +103,12 @@ bool LogScanner::isQuestionable(const string lUrl)
    int ii = 0;
    for ( vector<string>::iterator it=mQuestionableWords.begin(); it!=mQuestionableWords.end(); ++it)
    {
-      if (lUrl.find(*it) != string::npos )
+      //Get domain name because lUrl == https://petsandladys.com/sexbieberporn is not questionable
+      string lDomainName;
+      lDomainName = lUrl.substr(lUrl.find("//")+2);
+      lDomainName = lDomainName.substr(0,lDomainName.find("/"));
+
+      if (lDomainName.find(*it) != string::npos )
          return true;
       ii++;
    };
