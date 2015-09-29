@@ -41,7 +41,7 @@ private:
 private:
    string         mFileName;
    ifstream       mInFile;
-   vector<string> mQuestionableWords;
+   static const char * mQuestionableWords[];
 };
 
 #endif

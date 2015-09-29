@@ -1,14 +1,17 @@
 #include "LogScanner.h"
 
+#include <string.h>
+const char *LogScanner::mQuestionableWords[] = {
+   "porn",
+   "xxx",
+   "sex",
+   "bieber",
+   "NULL"
+};
 
 LogScanner::LogScanner()
 {
    mFileName = "";
-
-   mQuestionableWords.push_back("porn");
-   mQuestionableWords.push_back("xxx");
-   mQuestionableWords.push_back("sex");
-   mQuestionableWords.push_back("Bieber");
 }
 
 LogScanner::~LogScanner()
@@ -85,14 +88,14 @@ bool LogScanner::getNextQuestionableActivity(activityType &lActivity)
 bool LogScanner::isQuestionable(const string lUrl)
 {
    int ii = 0;
-   for ( vector<string>::iterator it=mQuestionableWords.begin(); it!=mQuestionableWords.end(); ++it)
+   while (strncmp(mQuestionableWords[ii], "NULL", 20)!=0)
    {
       //Get domain name because lUrl == https://petsandladys.com/sexbieberporn is not questionable
       string lDomainName;
       lDomainName = lUrl.substr(lUrl.find("//")+2);
       lDomainName = lDomainName.substr(0,lDomainName.find("/"));
 
-      if (lDomainName.find(*it) != string::npos )
+      if (lDomainName.find(mQuestionableWords[ii]) != string::npos )
          return true;
       ii++;
    };
